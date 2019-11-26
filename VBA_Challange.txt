@@ -1,0 +1,151 @@
+Sub alphabeticaltesting()
+
+        'Loop through all the stocks sheets
+        
+        
+        For Each ws In Worksheets
+        
+            Dim Worksheetname As String
+            Dim ticker As String
+            Dim Yearly_Change As Double
+            Dim Percent_Change As Double
+            Dim Total_Stock_Volume As Double
+            Dim i As Long
+            Dim j As Long
+            Dim open_price As Double
+            Dim next_open_price As Double
+            Dim close_price As Double
+            
+        
+        'Determine the last row
+            
+            lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+            'Assign Headers
+                
+           'Add the word Ticker as the I1 as column header
+            ws.Cells(1, 9).Value = "Ticker"
+                                        
+            'Add the word Yearly Change as the J1 Header
+            ws.Cells(1, 10).Value = "Yearly Change"
+        
+            'Add the word Percent Change as the K1 as column header
+            ws.Cells(1, 11).Value = "Percent Change"
+        
+            'Add the word Total Stock Volume as the L1 as column header
+            ws.Cells(1, 12).Value = "Total Stock Volume"
+             Total_Stock_Volume = 0
+             
+            'Add the word Ticker as the N1 as column header
+            ws.Cells(1, 14).Value = ""
+            
+            'Add the word Ticker as the O1 as column header
+            ws.Cells(1, 15).Value = "Ticker"
+            
+            'Add the word Ticker as the P1 as column header
+            ws.Cells(1, 16).Value = "Value"
+            
+            'Add the word Ticker as the N1 as column header
+            ws.Cells(2, 14).Value = "Greatest % Increase"
+            
+            'Add the word Ticker as the N1 as column header
+            ws.Cells(3, 14).Value = "Greatest % Decrease"
+             
+            'Add the word Ticker as the N1 as column header
+            ws.Cells(4, 14).Value = "Greatest Total Volume"
+            
+            'ws.Cells(2, 9).Value = ws.Cells(2, 1).Value
+            j = 2
+            'initial open price
+            open_price = ws.Cells(j, 3).Value
+            
+             
+            For i = 2 To lastRow
+                ' since data is sorted, open price for any ticker is the first occcurrance of that ticker in the rows.
+                'if the lookahead cell has same ticker symbol, update running total of stock value for that ticker.
+                If ws.Cells(i + 1, 1).Value = ws.Cells(i, 1).Value Then
+                    Total_Stock_Volume = Total_Stock_Volume + ws.Cells(i, 7).Value
+                    'if the lookahead cell does not have same ticker symbol, update running total of stock value with the current ticker value and entry ticker value to chart
+                ElseIf ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+                    'Put the last ticker value on the chart to the right
+                    ws.Cells(j, 9).Value = ws.Cells(i, 1).Value
+                    'update the total stock volume and add it to the chart to the right
+                    Total_Stock_Volume = Total_Stock_Volume + ws.Cells(i, 7)
+                    ws.Cells(j, 12).Value = Total_Stock_Volume
+                    ' capture the close price for the running ticker, calculate yearly change and % change and update the chart
+                    close_price = ws.Cells(i, 6).Value
+                    Yearly_Change = close_price - open_price
+                    ws.Cells(j, 10).Value = Yearly_Change
+                        ' figure out how to handle when open and close prices are 0
+                        If (open_price > 0) Then Percent_Change = Yearly_Change / open_price
+                      '  ElseIf (open_price = 0) Then Percent_Change = 0
+                      '  Else: Percent_Change = Yearly_Change / open_price
+                    ws.Cells(j, 11).NumberFormat = "0.00%"
+                    ws.Cells(j, 11).Value = Percent_Change
+                    ' update open_price for next ticker symbol
+                    open_price = ws.Cells(i + 1, 3)
+                
+                ' Ticker symbol created on chart, stock value updated. now move on for the next symbol
+                j = j + 1
+                ' ensure to set the stock volume to 0 for the next ticker symbol calculation
+                Total_Stock_Volume = 0
+                End If
+                
+               ' ws.Cells(j, 12).Value = Total_Stock_Volume
+               '
+               
+               
+            Next i
+            
+            ' now working on the color coded formatting of the sub table color index 3 means red, 10 means green
+            YClastRow = ws.Cells(Rows.Count, 10).End(xlUp).Row
+            For y = 2 To YClastRow
+                If ws.Cells(y, 10).Value < 0 Then
+                    ws.Cells(y, 10).Interior.ColorIndex = 3
+                ElseIf ws.Cells(y, 10).Value >= 0 Then
+                    ws.Cells(y, 10).Interior.ColorIndex = 10
+                End If
+            Next y
+            
+            ' now working on the summary subtable to the right showing gratest increase decrease etc
+            PClastRow = ws.Cells(Rows.Count, 11).End(xlUp).Row
+            For Z = 2 To PClastRow
+                
+                'get the max value from the column and store in the following variable for comparison
+                Dim greatest_increase As Double
+                greatest_increase = Application.WorksheetFunction.Max(ws.Range("K2:K" & PClastRow))
+                If ws.Cells(Z, 11).Value = greatest_increase Then
+                ws.Cells(2, 16).NumberFormat = "0.00%"
+                ws.Cells(2, 16).Value = ws.Cells(Z, 11)
+                'getting ticker symbol associated with the value
+                ws.Cells(2, 15).Value = ws.Cells(Z, 9)
+                End If
+                
+                'get the min value from the column and store in the following variable for comparison
+                Dim greatest_decrease As Double
+                greatest_decrease = Application.WorksheetFunction.Min(ws.Range("K2:K" & PClastRow))
+                If ws.Cells(Z, 11).Value = greatest_decrease Then
+                ws.Cells(3, 16).NumberFormat = "0.00%"
+                ws.Cells(3, 16).Value = ws.Cells(Z, 11)
+                'getting ticker symbol associated with the value
+                ws.Cells(3, 15).Value = ws.Cells(Z, 9)
+                End If
+                
+                'get the max value from the column and store in the following variable for comparison
+                Dim greatest_total_vol As Double
+                greatest_total_vol = Application.WorksheetFunction.Max(ws.Range("L2:L" & PClastRow))
+                If ws.Cells(Z, 12).Value = greatest_total_vol Then
+                ws.Cells(4, 16).Value = ws.Cells(Z, 12)
+                'getting ticker symbol associated with the value
+                ws.Cells(4, 15).Value = ws.Cells(Z, 9)
+                End If
+                
+            Next Z
+            
+        Next ws
+             
+End Sub
+
+' Full copy working
+
+
